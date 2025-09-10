@@ -1,0 +1,32 @@
+🔹 Navigator.push
+Adds (pushes) a new route (screen) on top of the stack.
+The previous screen stays in memory.
+You can go back with Navigator.pop(context).
+
+🔹 Navigator.pushReplacement
+Replaces the current screen with a new one.
+The previous screen is removed from the stack.
+You cannot go back to it with pop.
+
+## SafeArea: Prevents UI from overlapping with the status bar, notches, etc.
+
+Yes ✅ absolutely, you can use InkWell instead of GestureDetector.
+Both can detect taps, but the difference is:
+GestureDetector → detects gestures, but no visual feedback (no ripple effect).
+InkWell → detects taps and shows a ripple effect (Material ink splash) by default
+
+## SingleChildScrollView in Flutter is a scrollable widget that allows its single child to scroll when the content is larger than the available screen space.
+
+## validate() ensures all form fields are correct before submitting.
+Helps prevent invalid data from going forward.
+
+## initState() runs once when the widget is first created.
+Here, you are adding listeners to your text controllers:
+_phoneController.addListener(_validateInput)
+_emailController.addListener(_validateInput)
+Purpose: Every time the user types in the phone or email field, _validateInput is called automatically.
+
+
+## dispose() is called when the widget is removed from the widget tree.
+You must dispose of your TextEditingControllers to free up memory and prevent memory leaks.
+super.dispose() is called after your cleanup to complete the widget disposal.

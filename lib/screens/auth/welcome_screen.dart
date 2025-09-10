@@ -28,11 +28,10 @@ class WelcomeScreen extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
-                      // Big Discord icon
                       FaIcon(
                         FontAwesomeIcons.discord,
                         size: 120,
-                        color: Color.fromARGB(255, 229, 229, 236), // Discord blurple
+                        color: Color.fromARGB(255, 229, 229, 236),
                       ),
                       SizedBox(height: 32),
                       Text(

@@ -77,7 +77,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🔙 Back button
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: const Icon(Icons.arrow_back, color: Colors.white),
@@ -101,7 +100,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Container(
                 decoration: BoxDecoration(
                   color: const Color(0xFF2B2D31),
-                  borderRadius: BorderRadius.circular(50),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   children: [
@@ -115,9 +114,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
                             color: isPhoneSelected
-                                ? const Color(0xFF313338)
+                                ? const Color.fromARGB(255, 65, 69, 80)
                                 : Colors.transparent,
-                            borderRadius: BorderRadius.circular(50),
+                            borderRadius: BorderRadius.circular(30),
                           ),
                           child: Center(
                             child: Text(
@@ -143,9 +142,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
                             color: !isPhoneSelected
-                                ? const Color(0xFF313338)
+                                ? const Color.fromARGB(255, 65, 69, 80)
                                 : Colors.transparent,
-                            borderRadius: BorderRadius.circular(50),
+                            borderRadius: BorderRadius.circular(30),
                           ),
                           child: Center(
                             child: Text(
@@ -176,27 +175,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Row(
                   children: [
                     // Dropdown for country code
-                    DropdownButton<String>(
-                      dropdownColor: const Color(0xFF2B2D31),
-                      value: selectedCountryCode,
-                      style: const TextStyle(color: Colors.white),
-                      underline: const SizedBox(),
-                      items: countryCodes
-                          .map(
-                            (code) => DropdownMenuItem(
-                              value: code,
-                              child: Text(
-                                code,
-                                style: const TextStyle(color: Colors.white),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2B2D31),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                      child: DropdownButton<String>(
+                        dropdownColor: const Color(0xFF2B2D31),
+                        value: selectedCountryCode,
+                        style: const TextStyle(color: Colors.white),
+                        underline: const SizedBox(),
+                        items: countryCodes
+                            .map(
+                              (code) => DropdownMenuItem(
+                                value: code,
+                                child: Text(
+                                  code,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
                               ),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedCountryCode = value!;
-                        });
-                      },
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            selectedCountryCode = value!;
+                          });
+                        },
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -209,6 +215,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           hintStyle: const TextStyle(color: Colors.white54),
                           filled: true,
                           fillColor: const Color(0xFF2B2D31),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                            horizontal: 12,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide.none,
@@ -244,12 +254,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 16),
 
               // Privacy Policy
-              // Privacy Policy
               GestureDetector(
                 onTap: () async {
                   final url = Uri.parse("https://discord.com/privacy");
                   if (await canLaunchUrl(url)) {
                     await launchUrl(url, mode: LaunchMode.externalApplication);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Could not open link")),
+                    );
                   }
                 },
                 child: const Text(
