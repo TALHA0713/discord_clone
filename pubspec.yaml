@@ -38,6 +38,7 @@ dependencies:
   url_launcher: ^6.3.1
 
 dev_dependencies:
+  flutter_native_splash: ^2.4.6
   flutter_test:
     sdk: flutter
 
@@ -47,6 +48,18 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+
+flutter_native_splash:
+  # Background color for iOS and Android < 12
+  color: "#23272A" 
+  # Enable for both platforms
+  android: true
+  ios: true
+
+  # Android 12+ splash color
+  android_12:
+    color: "#23272A"
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

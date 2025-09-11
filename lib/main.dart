@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/splash/splash_screen.dart';
+import 'screens/auth/welcome_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Discord Clone',
       theme: ThemeData.dark(),
-      home: const SplashScreen(),
+      home: const WelcomeScreen(),
     );
   }
 }
