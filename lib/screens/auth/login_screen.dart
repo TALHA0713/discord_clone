@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:another_flushbar/flushbar.dart'; // Top-right notification
 import '../home/home_screen.dart';
 import '../auth/welcome_screen.dart';
+import '../../services/api_service.dart'; // Import your ApiService
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,18 +16,45 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailOrPhoneController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _loading = false;
 
-  // Valid credentials
-  final String validEmail = "devs@devs.com";
-  final String validPhone = "03222222223";
-  final String validPassword = "devs1234";
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
 
-  void _login() {
-    if (_formKey.currentState!.validate()) {
+    setState(() {
+      _loading = true;
+    });
+
+    // Use ApiService login method
+    final success = await ApiService.login(
+      _emailOrPhoneController.text.trim(),
+      _passwordController.text.trim(),
+    );
+
+    setState(() {
+      _loading = false;
+    });
+
+    if (success != null) {
+      // Navigate to HomeScreen
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
+    } else {
+      if (!mounted) return;
+      // Top-right snack bar using Flushbar
+      Flushbar(
+        message: "Invalid email/phone or password",
+        duration: const Duration(seconds: 3),
+        flushbarPosition: FlushbarPosition.TOP,
+        margin: const EdgeInsets.all(16),
+        borderRadius: BorderRadius.circular(8),
+        backgroundColor: Colors.redAccent,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        animationDuration: const Duration(milliseconds: 300),
+      ).show(context);
     }
   }
 
@@ -33,18 +62,12 @@ class _LoginScreenState extends State<LoginScreen> {
     if (value == null || value.isEmpty) {
       return "Please enter your email or phone number";
     }
-    if (value != validEmail && value != validPhone) {
-      return "Email or phone not recognized";
-    }
     return null;
   }
 
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
       return "Please enter your password";
-    }
-    if (value != validPassword) {
-      return "Incorrect password";
     }
     return null;
   }
@@ -103,7 +126,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 28),
-
                   const Text(
                     "EMAIL OR PHONE NUMBER",
                     style: TextStyle(
@@ -135,7 +157,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
@@ -170,7 +191,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton(
@@ -190,21 +210,30 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: _login,
+                      onPressed: _loading ? null : _login,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF5865F2),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
-                      child: const Text(
-                        "Log In",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                      child: _loading
+                          ? const SizedBox(
+                              width: 10,
+                              height: 10,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2, // makes the spinner thinner
+                              ),
+                            )
+                          : const Text(
+                              "Log In",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                     ),
                   ),
                 ],

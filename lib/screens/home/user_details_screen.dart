@@ -1,17 +1,24 @@
 import 'dart:async';
-import 'package:discord_clone/screens/home/home_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // <-- added for formatting dates
+import 'package:discord_clone/screens/home/home_screen.dart';
 
 class UserDetailScreen extends StatefulWidget {
   final String name;
   final String? username;
   final String avatarUrl;
+  final bool isOnline; // <-- online/offline status
+  final String? bio; // <-- added
+  final String? memberSince; // <-- added
 
   const UserDetailScreen({
     super.key,
     required this.name,
     this.username,
     required this.avatarUrl,
+    required this.isOnline,
+    this.bio,
+    this.memberSince,
   });
 
   @override
@@ -28,8 +35,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
   @override
   void initState() {
     super.initState();
-
-    // simulate playing track
+    // Simulate playing track
     timer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (currentTime < songDuration) {
         setState(() {
@@ -54,6 +60,16 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     return "$minutes:$secs";
   }
 
+  String formatMemberSince(String? isoDate) {
+    if (isoDate == null || isoDate.isEmpty) return 'N/A';
+    try {
+      final date = DateTime.parse(isoDate);
+      return DateFormat('MMM dd, yyyy').format(date); // e.g., Sep 12, 2025
+    } catch (e) {
+      return 'N/A';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const darkGray = Color(0xFF23272A);
@@ -63,21 +79,13 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
 
     return Scaffold(
       backgroundColor: darkGray,
-       appBar: AppBar(
+      appBar: AppBar(
         backgroundColor: const Color(0xFF36393F),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const HomeScreen()),
-            );
-          },
+          onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'User Detail',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('User Detail', style: TextStyle(color: Colors.white)),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -117,7 +125,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Avatar
+                        // Avatar + Status Dot
                         Stack(
                           clipBehavior: Clip.none,
                           children: [
@@ -142,7 +150,9 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                                 width: 20,
                                 height: 20,
                                 decoration: BoxDecoration(
-                                  color: statusGreen,
+                                  color: widget.isOnline
+                                      ? statusGreen
+                                      : Colors.grey,
                                   shape: BoxShape.circle,
                                   border: Border.all(color: darkGray, width: 4),
                                 ),
@@ -207,9 +217,9 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                       ),
                       padding: const EdgeInsets.all(12),
                       child: Row(
-                        children: const [
-                          Text("🌴", style: TextStyle(fontSize: 24)),
-                          SizedBox(width: 8),
+                        children: [
+                          const Text("🌴", style: TextStyle(fontSize: 24)),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,8 +228,8 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                                   "just doing some frog fractions",
                                   style: TextStyle(color: Colors.white),
                                 ),
-                                SizedBox(height: 2),
-                                Text(
+                                const SizedBox(height: 2),
+                                const Text(
                                   "Clears in 49 minutes",
                                   style: TextStyle(
                                     color: lightGray,
@@ -229,7 +239,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                               ],
                             ),
                           ),
-                          Icon(Icons.close, color: lightGray),
+                          const Icon(Icons.close, color: lightGray),
                         ],
                       ),
                     ),
@@ -239,7 +249,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
             ),
             const SizedBox(height: 16),
 
-            // -------- Spotify Section (with running bar) --------
+            // -------- Spotify Section --------
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Container(
@@ -354,10 +364,10 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 padding: const EdgeInsets.all(16),
-                child: const Column(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       "About Me",
                       style: TextStyle(
                         color: lightGray,
@@ -365,10 +375,10 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
-                      "hello! i am cheddar and i am on the computer",
-                      style: TextStyle(color: Colors.white),
+                      widget.bio ?? "No bio available",
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ],
                 ),
@@ -386,9 +396,9 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 padding: const EdgeInsets.all(16),
-                child: const Text(
-                  "Member Since: Jan 2024",
-                  style: TextStyle(color: lightGray, fontSize: 14),
+                child: Text(
+                  "Member Since: ${formatMemberSince(widget.memberSince)}",
+                  style: const TextStyle(color: lightGray, fontSize: 14),
                 ),
               ),
             ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'add_friend.dart'; // Import the Add Friend page
 
 class TopBlock extends StatelessWidget {
   const TopBlock({super.key});
@@ -26,6 +27,7 @@ class TopBlock extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
+
           // Search row
           Row(
             children: [
@@ -37,13 +39,11 @@ class TopBlock extends StatelessWidget {
                   color: const Color(0xFF40444B),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
-                  Icons.search,
-                  color: Colors.white,
-                ),
+                child: const Icon(Icons.search, color: Colors.white),
               ),
               const SizedBox(width: 8),
-              // Search input field
+
+              // Search input field (used as Add Friend button here)
               Expanded(
                 child: Container(
                   height: 40, // same as search icon
@@ -56,17 +56,19 @@ class TopBlock extends StatelessWidget {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12),
                       onTap: () {
-                        // Handle add friend tap
+                        // Navigate to AddFriendScreen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AddFriendScreen(),
+                          ),
+                        );
                       },
                       child: Center(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: const [
-                            Icon(
-                              Icons.add,
-                              color: Colors.white,
-                              size: 20,
-                            ),
+                            Icon(Icons.add, color: Colors.white, size: 20),
                             SizedBox(width: 6),
                             Text(
                               "Add Friend",

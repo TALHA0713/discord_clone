@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../home/home_screen.dart';
+import '../auth/login_screen.dart'; // Make sure you have this
+import '../../services/api_service.dart';
+
 import 'voice_video_settings_screen.dart';
 import 'notifications_settings_screen.dart';
 import 'text_images_settings_screen.dart';
@@ -18,20 +21,60 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // App Settings data
     final List<Map<String, dynamic>> appSettings = [
-      {"icon": Icons.mic, "label": "Voice & Video", "screen": const VoiceVideoSettingsScreen()},
-      {"icon": Icons.notifications, "label": "Notifications", "screen": const NotificationsSettingsScreen()},
-      {"icon": Icons.image, "label": "Text & Images", "screen": const TextImagesSettingsScreen()},
-      {"icon": Icons.palette, "label": "Appearance", "screen": const AppearanceSettingsScreen()},
-      {"icon": Icons.accessibility, "label": "Accessibility", "screen": const AccessibilitySettingsScreen()},
-      {"icon": Icons.settings, "label": "Behavior", "screen": const BehaviorSettingsScreen()},
-      {"icon": Icons.translate, "label": "Language", "screen": const LanguageSettingsScreen()},
-      {"icon": Icons.help_outline, "label": "Activity Status", "screen": const ActivityStatusSettingsScreen()},
+      {
+        "icon": Icons.mic,
+        "label": "Voice & Video",
+        "screen": const VoiceVideoSettingsScreen(),
+      },
+      {
+        "icon": Icons.notifications,
+        "label": "Notifications",
+        "screen": const NotificationsSettingsScreen(),
+      },
+      {
+        "icon": Icons.image,
+        "label": "Text & Images",
+        "screen": const TextImagesSettingsScreen(),
+      },
+      {
+        "icon": Icons.palette,
+        "label": "Appearance",
+        "screen": const AppearanceSettingsScreen(),
+      },
+      {
+        "icon": Icons.accessibility,
+        "label": "Accessibility",
+        "screen": const AccessibilitySettingsScreen(),
+      },
+      {
+        "icon": Icons.settings,
+        "label": "Behavior",
+        "screen": const BehaviorSettingsScreen(),
+      },
+      {
+        "icon": Icons.translate,
+        "label": "Language",
+        "screen": const LanguageSettingsScreen(),
+      },
+      {
+        "icon": Icons.help_outline,
+        "label": "Activity Status",
+        "screen": const ActivityStatusSettingsScreen(),
+      },
     ];
 
     // App Information data
     final List<Map<String, dynamic>> appInfo = [
-      {"icon": Icons.info_outline, "label": "Change Log", "screen": const ChangeLogScreen()},
-      {"icon": Icons.help_outline, "label": "Support", "screen": const SupportScreen()},
+      {
+        "icon": Icons.info_outline,
+        "label": "Change Log",
+        "screen": const ChangeLogScreen(),
+      },
+      {
+        "icon": Icons.help_outline,
+        "label": "Support",
+        "screen": const SupportScreen(),
+      },
     ];
 
     return Scaffold(
@@ -149,6 +192,39 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   );
                 },
+              ),
+
+              const SizedBox(height: 32),
+
+              // 🚀 Logout Button
+              Center(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  icon: const Icon(Icons.logout, color: Colors.white),
+                  label: const Text(
+                    "Logout",
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                  onPressed: () async {
+                    await ApiService.logout(); // remove token
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
+                      ),
+                      (route) => false,
+                    );
+                  },
+                ),
               ),
             ],
           ),
