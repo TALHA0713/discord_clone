@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 
 class AddFriendScreen extends StatefulWidget {
-  const AddFriendScreen({Key? key}) : super(key: key);
+  const AddFriendScreen({super.key});
 
   @override
   State<AddFriendScreen> createState() => _AddFriendScreenState();

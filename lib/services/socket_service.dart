@@ -9,13 +9,26 @@ class SocketService {
   late IO.Socket socket;
   bool _isConnected = false;
 
-  /// Callbacks for friend status and messages
+  /// Callbacks
   Function(String friendId, bool isOnline)? onFriendStatusChanged;
   Function(Map<String, dynamic> message)? onMessageReceived;
+
+  /// Currently open chat (chatId), used to mark messages read automatically
+  String? _currentOpenChatId;
 
   /// Initialize socket
   static Future<void> init(String userId, String socketUrl) async {
     _instance._connect(userId, socketUrl);
+  }
+
+  /// Set the currently open chat
+  void setCurrentOpenChat(String? chatId) {
+    _currentOpenChatId = chatId;
+
+    // Mark messages as read for this chat
+    if (chatId != null) {
+      NotificationManager.markChatRead(chatId);
+    }
   }
 
   void _connect(String userId, String socketUrl) {
@@ -35,7 +48,7 @@ class SocketService {
       print('✅ Socket.IO connected!');
       _isConnected = true;
 
-      // Join personal room for this user
+      // Join personal room
       socket.emit('join_user_room', userId);
       print('📥 Joined personal room: $userId');
     });
@@ -49,30 +62,29 @@ class SocketService {
       }
     });
 
-    // --- Realtime notifications ---
+    // --- Notifications ---
     socket.on('new_notification', (data) {
       final notif = Map<String, dynamic>.from(data);
-
-      // Ensure isRead exists
-      if (!notif.containsKey('isRead')) {
-        notif['isRead'] = false;
-      }
-
-      // Avoid duplicates
-      final exists = NotificationManager.notifications.value.any(
-        (n) => n['_id'] == notif['_id'],
-      );
-
-      if (!exists) {
-        NotificationManager.addNotification(notif);
-        print('📥 New notification: $notif');
-      }
+      if (!notif.containsKey('isRead')) notif['isRead'] = false;
+      NotificationManager.addNotification(notif);
+      print('📥 New notification: $notif');
     });
 
     // --- Chat messages ---
     socket.on('new_message', (data) {
       final message = Map<String, dynamic>.from(data);
+
+      // 1️⃣ Real-time callback to UI
       onMessageReceived?.call(message);
+
+      // 2️⃣ If chat is not open, add to notifications
+      if (_currentOpenChatId != message['chatId']) {
+        NotificationManager.addMessageNotification(message);
+      } else {
+        // Mark message as read if chat is open
+        NotificationManager.markChatRead(message['chatId']);
+      }
+
       print('💬 New message: $message');
     });
 
@@ -86,7 +98,7 @@ class SocketService {
   // Join a chat room
   void joinChat(String chatId) => socket.emit('join_chat', chatId);
 
-  // Send message through socket
+  // Send message
   void sendMessage(String chatId, String text, {String type = "text"}) {
     socket.emit('send_message', {'chatId': chatId, 'text': text, 'type': type});
   }

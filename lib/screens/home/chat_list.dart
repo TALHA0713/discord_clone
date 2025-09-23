@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import './user_details_screen.dart';
+import './chat_screen.dart';
 
 class ChatList extends StatefulWidget {
   const ChatList({super.key});
@@ -94,6 +95,16 @@ class _ChatListState extends State<ChatList> {
         final bio = friend['bio'] ?? "";
         final memberSince = friend['memberSince'] ?? "";
 
+        final chat = chats.firstWhere(
+          (c) =>
+              c is Map<String, dynamic> &&
+              !(c['isGroup'] ?? false) &&
+              (c['participants'] as List<dynamic>).any(
+                (p) => p['_id'] == friendId,
+              ),
+          orElse: () => <String, dynamic>{},
+        );
+
         return chatTile(
           context: context,
           name: friend['username'] ?? "Unknown",
@@ -102,6 +113,8 @@ class _ChatListState extends State<ChatList> {
           isOnline: isOnline,
           bio: bio,
           memberSince: memberSince,
+          friendId: friendId,
+          chat: chat,
         );
       },
     );
@@ -117,94 +130,129 @@ class _ChatListState extends State<ChatList> {
     int unreadCount = 0,
     String? bio,
     String? memberSince,
+    required String friendId,
+    required Map<String, dynamic> chat,
   }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: isSelected ? Colors.grey[700] : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => UserDetailScreen(
-                    name: name,
-                    avatarUrl: avatarUrl,
-                    username: name,
-                    isOnline: isOnline,
-                    bio: bio,
-                    memberSince: memberSince,
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.grey[700] : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => UserDetailScreen(
+                        name: name,
+                        avatarUrl: avatarUrl,
+                        username: name,
+                        isOnline: isOnline,
+                        bio: bio,
+                        memberSince: memberSince,
+                      ),
+                    ),
+                  );
+                },
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundImage: NetworkImage(avatarUrl),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: isOnline ? Colors.green : Colors.grey,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.black, width: 2),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () async {
+                    // If no chat exists, call API to create
+                    if (chat.isEmpty ||
+                        !(chat['participants'] as List).any(
+                          (p) => p['_id'] == friendId,
+                        )) {
+                      await ApiService.create1on1Chat(friendId);
+                    }
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChatScreen(
+                          friendName: name,
+                          friendAvatar: avatarUrl,
+                          isOnline: isOnline,
+                          friendId: friendId,
+                          chat: chat,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      ),
+                      if (message != null)
+                        Text(
+                          message,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 13,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                    ],
                   ),
                 ),
-              );
-            },
-            child: Stack(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundImage: NetworkImage(avatarUrl),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: isOnline ? Colors.green : Colors.grey,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.black, width: 2),
+              ),
+
+              if (unreadCount > 0)
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      unreadCount.toString(),
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
                     ),
                   ),
                 ),
-              ],
-            ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: isSelected
-                        ? FontWeight.bold
-                        : FontWeight.normal,
-                  ),
-                ),
-                if (message != null)
-                  Text(
-                    message,
-                    style: const TextStyle(color: Colors.grey, fontSize: 13),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
-            ),
-          ),
-          if (unreadCount > 0)
-            Container(
-              width: 20,
-              height: 20,
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  unreadCount.toString(),
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ),
-            ),
-        ],
-      ),
+        ),
+        Divider(color: Colors.grey[700], thickness: 0.5, height: 0),
+      ],
     );
   }
 }

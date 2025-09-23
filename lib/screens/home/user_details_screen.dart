@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // <-- added for formatting dates
-import 'package:discord_clone/screens/home/home_screen.dart';
+// import 'package:discord_clone/screens/home/home_screen.dart';
 
 class UserDetailScreen extends StatefulWidget {
   final String name;
