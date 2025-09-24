@@ -99,9 +99,16 @@ class SocketService {
   void joinChat(String chatId) => socket.emit('join_chat', chatId);
 
   // Send message
-  void sendMessage(String chatId, String text, {String type = "text"}) {
-    socket.emit('send_message', {'chatId': chatId, 'text': text, 'type': type});
-  }
+// Send message
+void sendMessage(String chatId, String text, String senderId, {String type = "text"}) {
+  socket.emit('send_message', {
+    'chatId': chatId,
+    'text': text,
+    'type': type,
+    'senderId': senderId,
+  });
+}
+
 
   // Disconnect socket
   void disconnect() {

@@ -8,7 +8,6 @@ class ChatScreen extends StatefulWidget {
   final String friendAvatar;
   final bool isOnline;
   final String friendId; // friend's ID
-  final Map<String, dynamic> chat; // chat object
 
   const ChatScreen({
     super.key,
@@ -16,7 +15,6 @@ class ChatScreen extends StatefulWidget {
     required this.friendAvatar,
     required this.isOnline,
     required this.friendId,
-    required this.chat,
   });
 
   @override
@@ -30,55 +28,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   late List<Map<String, dynamic>> _messages;
   late String myId;
+  late String chatId;
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-
-    // Determine myId safely
-    myId = "";
-    if (widget.chat.isNotEmpty &&
-        widget.chat['participants'] != null &&
-        widget.chat['participants'] is List) {
-      final participants = List<Map<String, dynamic>>.from(
-        widget.chat['participants'],
-      );
-      try {
-        final you = participants.firstWhere(
-          (p) => p['_id'] != widget.friendId,
-          orElse: () => {'_id': ''},
-        );
-        myId = you['_id'] ?? '';
-      } catch (e) {
-        myId = '';
-      }
-    }
-
-    // Load messages safely
     _messages = [];
-    if (widget.chat.isNotEmpty &&
-        widget.chat['messages'] != null &&
-        widget.chat['messages'] is List) {
-      _messages = List<Map<String, dynamic>>.from(widget.chat['messages']);
-    }
 
-    // Listen to real-time messages for this chat
-    SocketService().onMessageReceived = (message) {
-      if (message['chatId'] == widget.chat['_id']) {
-        setState(() {
-          _messages.add(message);
-        });
-        _scrollToBottom();
-      }
-    };
-
-    // Set current open chat for SocketService
-    SocketService().setCurrentOpenChat(widget.chat['_id']);
-
-    // Join chat room
-    SocketService().joinChat(widget.chat['_id']);
-
+    _initChat();
     _scrollController.addListener(() {
       if (_scrollController.offset <
           _scrollController.position.maxScrollExtent - 200) {
@@ -87,8 +46,65 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         setState(() => _showScrollToBottom = false);
       }
     });
+  }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  Future<void> _initChat() async {
+    setState(() => isLoading = true);
+
+    try {
+      final chatData = await ApiService.create1on1Chat(
+        widget.friendId,
+      ); // fetch or create
+
+      if (chatData != null) {
+        chatId = chatData['chatId'] ?? '';
+
+        // Identify myId from participants
+        myId = "";
+        if (chatData['participants'] != null &&
+            chatData['participants'] is List) {
+          final participants = List<Map<String, dynamic>>.from(
+            chatData['participants'],
+          );
+          final participantIds = participants
+              .map((p) => p['_id'].toString())
+              .toList();
+
+          myId = participantIds.firstWhere(
+            (id) => id != widget.friendId,
+            orElse: () => '',
+          );
+        }
+
+        // Load existing messages
+        if (chatData['messages'] != null && chatData['messages'] is List) {
+          _messages = List<Map<String, dynamic>>.from(
+            chatData['messages'] ?? [],
+          );
+        }
+
+        // Join socket room
+        if (chatId.isNotEmpty) {
+          SocketService().setCurrentOpenChat(chatId);
+          SocketService().joinChat(chatId);
+        }
+
+        // Listen for incoming messages
+        SocketService().onMessageReceived = (message) {
+          if (message['chatId'] == chatId && message['sender'] != myId) {
+            setState(() {
+              _messages.add(Map<String, dynamic>.from(message));
+            });
+            _scrollToBottom();
+          }
+        };
+      }
+    } catch (e) {
+      print("Error initializing chat: $e");
+    } finally {
+      setState(() => isLoading = false);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    }
   }
 
   @override
@@ -121,15 +137,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
-  // ---------------- SEND MESSAGE ----------------
-  void _sendMessage(String text) async {
-    if (text.trim().isEmpty) return;
+  void _sendMessage(String text) {
+    if (text.trim().isEmpty || chatId.isEmpty) return;
 
     final tempMessage = {
       "sender": myId,
       "text": text.trim(),
       "createdAt": DateTime.now().toIso8601String(),
-      "chatId": widget.chat['_id'],
+      "chatId": chatId,
     };
 
     setState(() {
@@ -139,19 +154,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _textController.clear();
     _scrollToBottom();
 
-    // 1️⃣ Send via Socket (real-time)
-    SocketService().sendMessage(widget.chat['_id'], text.trim());
-
-    // 2️⃣ Save to backend (for persistence)
-    final success = await ApiService.sendMessage(
-      widget.chat['_id'],
-      text.trim(),
-    );
-
-    if (!success) {
-      // Optionally handle unsent messages
-      print("Failed to save message to backend");
-    }
+    SocketService().sendMessage(chatId, text.trim(), myId);
   }
 
   String _formatDate(DateTime date) {
@@ -165,6 +168,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF36393F),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: const Color(0xFF36393F),

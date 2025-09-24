@@ -95,16 +95,6 @@ class _ChatListState extends State<ChatList> {
         final bio = friend['bio'] ?? "";
         final memberSince = friend['memberSince'] ?? "";
 
-        final chat = chats.firstWhere(
-          (c) =>
-              c is Map<String, dynamic> &&
-              !(c['isGroup'] ?? false) &&
-              (c['participants'] as List<dynamic>).any(
-                (p) => p['_id'] == friendId,
-              ),
-          orElse: () => <String, dynamic>{},
-        );
-
         return chatTile(
           context: context,
           name: friend['username'] ?? "Unknown",
@@ -114,7 +104,6 @@ class _ChatListState extends State<ChatList> {
           bio: bio,
           memberSince: memberSince,
           friendId: friendId,
-          chat: chat,
         );
       },
     );
@@ -131,7 +120,6 @@ class _ChatListState extends State<ChatList> {
     String? bio,
     String? memberSince,
     required String friendId,
-    required Map<String, dynamic> chat,
   }) {
     return Column(
       children: [
@@ -185,16 +173,9 @@ class _ChatListState extends State<ChatList> {
               const SizedBox(width: 12),
               Expanded(
                 child: GestureDetector(
+                  // Inside chatTile() onTap
                   onTap: () async {
-                    // If no chat exists, call API to create
-                    if (chat.isEmpty ||
-                        !(chat['participants'] as List).any(
-                          (p) => p['_id'] == friendId,
-                        )) {
-                      await ApiService.create1on1Chat(friendId);
-                    }
-
-                    Navigator.push(
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => ChatScreen(
@@ -202,11 +183,14 @@ class _ChatListState extends State<ChatList> {
                           friendAvatar: avatarUrl,
                           isOnline: isOnline,
                           friendId: friendId,
-                          chat: chat,
                         ),
                       ),
                     );
+
+                    // After coming back from ChatScreen, reload latest data
+                    await loadFriendsAndChats();
                   },
+
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -232,7 +216,6 @@ class _ChatListState extends State<ChatList> {
                   ),
                 ),
               ),
-
               if (unreadCount > 0)
                 Container(
                   width: 20,
